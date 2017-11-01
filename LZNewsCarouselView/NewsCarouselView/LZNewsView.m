@@ -60,8 +60,9 @@
     _titleLabel.text = @"暂无数据...";
     [_newsBgV addSubview:_titleLabel];
     
+    __weak typeof(self) weakSelf = self;
     [_newsBgV mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.right.top.bottom.equalTo(self);
+        make.left.right.top.bottom.equalTo(weakSelf);
     }];
     
     [_iconImgView mas_makeConstraints:^(MASConstraintMaker *make) {
