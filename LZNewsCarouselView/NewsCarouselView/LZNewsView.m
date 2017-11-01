@@ -8,20 +8,20 @@
 
 #import "LZNewsView.h"
 #import "LZNewsModel.h"
-#import "HCConfig.h"
 #import <SDWebImage/UIImageView+WebCache.h>
 #import <Masonry/Masonry.h>
 
 @interface LZNewsView ()<CAAnimationDelegate>
 
-@property (nonatomic, strong) UIView *newsView;
-@property (nonatomic, strong) NSArray *newsDataArr;
 @property (nonatomic, assign) NSUInteger newsIndex; //初始值设置为0
-@property (nonatomic, strong) NSTimer *timer;
-@property (nonatomic, copy) ClickAction tapAction;
+@property (nonatomic, strong) NSTimer *timer; //定时器
 
+@property (nonatomic, strong) UIView *newsBgV;
 @property (nonatomic, strong) UIImageView *iconImgView;
 @property (nonatomic, strong) UILabel *titleLabel;
+
+@property (nonatomic, assign, getter=isHaveNews) BOOL haveNews; //有无数据标识，有 YES 无 NO
+@property (nonatomic, copy) ClickAction tapAction; //点击触发回调
 
 @end
 
@@ -41,36 +41,56 @@
 }
 
 - (void)createSubviews{
-    _newsView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height)];
     UITapGestureRecognizer *tapGer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapToNewsDetail:)];
-    _newsView.userInteractionEnabled = YES;
-    [_newsView addGestureRecognizer:tapGer];
-    [self addSubview:_newsView];
+    [self addGestureRecognizer:tapGer];
     
-    _iconImgView = [[UIImageView alloc] initWithFrame:CGRectMake(12, 10, 22, 22)];
+    _newsBgV = [[UIView alloc] init];
+    [self addSubview:_newsBgV];
+    
+    _iconImgView = [[UIImageView alloc] init];
     _iconImgView.contentMode = UIViewContentModeScaleAspectFill;
     _iconImgView.layer.masksToBounds = YES;
-    [_newsView addSubview:_iconImgView];
+    _iconImgView.image = [UIImage imageNamed:@"hp_newsIcon"];
+    [_newsBgV addSubview:_iconImgView];
     
-    _titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(_iconImgView.right+8, _iconImgView.top, _newsView.width-_iconImgView.right-8-12, _iconImgView.height)];
+    _titleLabel = [[UILabel alloc] init];
     _titleLabel.textColor = [UIColor blackColor];
     _titleLabel.numberOfLines = 1;
     _titleLabel.font = [UIFont systemFontOfSize:15];
-    [_newsView addSubview:_titleLabel];
+    _titleLabel.text = @"暂无数据...";
+    [_newsBgV addSubview:_titleLabel];
+    
+    [_newsBgV mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.right.top.bottom.equalTo(self);
+    }];
+    
+    [_iconImgView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(_newsBgV).offset(12);
+        make.top.equalTo(_newsBgV).offset(10);
+        make.width.height.equalTo(@22);
+    }];
+    
+    [_titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(_iconImgView.mas_right).offset(8);
+        make.right.equalTo(_newsBgV).offset(-12);
+        make.height.centerY.equalTo(_iconImgView);
+    }];
 }
 
 //点击进入详情
 - (void)tapToNewsDetail:(UITapGestureRecognizer *)tapGer{
-    if (self.tapAction) {
+    if (self.tapAction && self.isHaveNews) {
         self.tapAction(_newsIndex);
     }
 }
 
 - (void)setDataArr:(NSArray *)dataArr{
     _newsIndex = 0;
-    self.newsDataArr = dataArr;
-    if (self.newsDataArr.count == 0) {
-        self.newsDataArr = [NSArray arrayWithObject:[LZNewsModel modelWithImgUrlStr:@"" titleStr:@"暂无数据..."]];
+    _dataArr = dataArr;
+    self.haveNews = YES;
+    if (_dataArr.count == 0) {
+        self.haveNews = NO;
+        _dataArr = [NSArray arrayWithObject:[LZNewsModel modelWithImgUrlStr:@"" titleStr:@"暂无数据..."]];
     }
     [self showCarouselViewDataAndSetupAnimation];
 }
@@ -78,13 +98,13 @@
 //填充数据并设置动画
 - (void)showCarouselViewDataAndSetupAnimation{
     NSLog(@"---%lu---",_newsIndex);
-    LZNewsModel *model = self.newsDataArr[_newsIndex];
+    LZNewsModel *model = _dataArr[_newsIndex];
     [self fillDataWithModel:model];
     
     [UIView animateWithDuration:0.7 delay:0 options:0 animations:^(){
-        _newsView.alpha = 0.2;
-        [_newsView exchangeSubviewAtIndex:1 withSubviewAtIndex:0];
-        _newsView.alpha = 1;
+        _newsBgV.alpha = 0.2;
+        [_newsBgV exchangeSubviewAtIndex:1 withSubviewAtIndex:0];
+        _newsBgV.alpha = 1;
     } completion:^(BOOL finished){
         //创建定时器
         _timer = [NSTimer scheduledTimerWithTimeInterval:4 target:self selector:@selector(changeNewsData) userInfo:nil repeats:YES];
@@ -95,7 +115,7 @@
 
 - (void)changeNewsData{
     _newsIndex ++;
-    if (_newsIndex >= [self.newsDataArr count]) {
+    if (_newsIndex >= [_dataArr count]) {
         _newsIndex = 0;
     }
     CATransition *animation = [CATransition animation];
@@ -105,10 +125,10 @@
     animation.fillMode = kCAFillModeForwards;
     animation.removedOnCompletion = YES;
     animation.type = @"cube";
-    [_newsView.layer addAnimation:animation forKey:@"animationID"];
+    [_newsBgV.layer addAnimation:animation forKey:@"animationID"];
     
     NSLog(@"---%lu---",_newsIndex);
-    LZNewsModel *model = self.newsDataArr[_newsIndex];
+    LZNewsModel *model = _dataArr[_newsIndex];
     [self fillDataWithModel:model];
 }
 

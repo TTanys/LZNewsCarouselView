@@ -31,13 +31,7 @@
     [newsBgV addSubview:newsTitImgV];
     newsBgV.center = self.view.center;
     
-    UIView *newsInfoBgV = [[UIView alloc] initWithFrame:CGRectMake(newsTitImgV.right+16, 10, newsBgV.width-newsTitImgV.right-16-10, 62-20)];
-    newsInfoBgV.backgroundColor = HEXCOLOR(@"#eeeeee");
-    newsInfoBgV.layer.cornerRadius = 8;
-    newsInfoBgV.layer.masksToBounds = YES;
-    newsInfoBgV.layer.borderWidth = 0.7;
-    newsInfoBgV.layer.borderColor = HEXCOLOR(@"#e1e2e5").CGColor;
-    [newsBgV addSubview:newsInfoBgV];
+    CGRect newsFrame = CGRectMake(newsTitImgV.right+16, 10, newsBgV.width-newsTitImgV.right-16-10, 62-20);
     
     NSMutableArray *newsArr = [NSMutableArray arrayWithObjects:
                                [LZNewsModel modelWithImgUrlStr:@"http://pic7.nipic.com/20100518/3409334_031036048098_2.jpg" titleStr:@"附近的咖啡机的疯狂减肥的大家疯狂的风景地方呵呵呵呵哈哈哈"],
@@ -47,15 +41,22 @@
                                [LZNewsModel modelWithImgUrlStr:@"http://pic40.nipic.com/20140424/10558908_213423765000_2.jpg" titleStr:@"的房间打开附近的空间疯狂的疯狂的减肥空间的开发发动机"],
                                [LZNewsModel modelWithImgUrlStr:@"http://pic7.nipic.com/20100609/3143623_160732828380_2.jpg" titleStr:@"聚会稻盛和夫的煽风点火付电话费对方回复回复陪我我我"], nil];
     
-    LZNewsView *newsView = [LZNewsView newsViewWithFrame:CGRectMake(0, 0, newsInfoBgV.width, newsInfoBgV.height) clickAction:^(NSUInteger index) {
+    __weak typeof(self) weakSelf = self;
+    LZNewsView *newsView = [LZNewsView newsViewWithFrame:newsFrame clickAction:^(NSUInteger index) {
         NSLog(@"---%lu---",index);
         LZNewsModel *model = newsArr[index];
         LZNewsDetailViewController *detailVc = [LZNewsDetailViewController new];
         detailVc.model = model;
-        [self.navigationController pushViewController:detailVc animated:YES];
+        [weakSelf.navigationController pushViewController:detailVc animated:YES];
     }];
     newsView.dataArr = newsArr;
-    [newsInfoBgV addSubview:newsView];
+    [newsBgV addSubview:newsView];
+    
+    newsView.backgroundColor = HEXCOLOR(@"#eeeeee");
+    newsView.layer.cornerRadius = 8;
+    newsView.layer.masksToBounds = YES;
+    newsView.layer.borderWidth = 0.7;
+    newsView.layer.borderColor = HEXCOLOR(@"#e1e2e5").CGColor;
 }
 
 @end
