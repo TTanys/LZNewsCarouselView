@@ -7,6 +7,9 @@ build/
 DerivedData/
 
 ## Various settings
+zhajianjun.txt
+*.docx
+.gitignore
 *.pbxuser
 !default.pbxuser
 *.mode1v3
